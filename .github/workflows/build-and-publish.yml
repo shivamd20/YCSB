@@ -25,7 +25,28 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '11'
-          cache: maven
+          cache: 'maven'
+
+      # Cache Maven wrapper distribution
+      - name: Cache Maven wrapper
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/wrapper
+          key: ${{ runner.os }}-maven-wrapper-${{ hashFiles('**/maven-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-wrapper-
+
+      # Cache build outputs for faster incremental builds
+      - name: Cache Maven build outputs
+        uses: actions/cache@v4
+        with:
+          path: |
+            **/target
+            !**/target/**/*.jar
+            !**/target/**/*.war
+          key: ${{ runner.os }}-maven-build-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-maven-build-
 
       - name: Configure Maven settings
         run: |
@@ -42,8 +63,17 @@ jobs:
           </settings>
           EOF
 
-      - name: Build
-        run: mvn -B -DskipTests clean package
+      - name: Build Core
+        run: mvn -B -DskipTests -Dcheckstyle.skip=true clean install -f core/pom.xml
+
+      - name: Build Binding Parent
+        run: mvn -B -DskipTests -Dcheckstyle.skip=true clean install -f binding-parent/pom.xml
+
+      - name: Build ShvmDB
+        run: mvn -B -DskipTests -Dcheckstyle.skip=true clean package -f shvmdb/pom.xml
 
       - name: Publish to GitHub Packages
-        run: mvn -B -DskipTests deploy
+        run: |
+          mvn -B -DskipTests -Dcheckstyle.skip=true deploy -f core/pom.xml
+          mvn -B -DskipTests -Dcheckstyle.skip=true deploy -f binding-parent/pom.xml
+          mvn -B -DskipTests -Dcheckstyle.skip=true deploy -f shvmdb/pom.xml

@@ -63,17 +63,10 @@ jobs:
           </settings>
           EOF
 
-      - name: Build Core
-        run: mvn -B -DskipTests -Dcheckstyle.skip=true clean install -f core/pom.xml
-
-      - name: Build Binding Parent
-        run: mvn -B -DskipTests -Dcheckstyle.skip=true clean install -f binding-parent/pom.xml
-
-      - name: Build ShvmDB
-        run: mvn -B -DskipTests -Dcheckstyle.skip=true clean package -f shvmdb/pom.xml
+      - name: Build ShvmDB Binding
+        run: mvn -B -DskipTests -Dcheckstyle.skip=true clean package
+        working-directory: shvmdb
 
       - name: Publish to GitHub Packages
-        run: |
-          mvn -B -DskipTests -Dcheckstyle.skip=true deploy -f core/pom.xml
-          mvn -B -DskipTests -Dcheckstyle.skip=true deploy -f binding-parent/pom.xml
-          mvn -B -DskipTests -Dcheckstyle.skip=true deploy -f shvmdb/pom.xml
+        run: mvn -B -DskipTests -Dcheckstyle.skip=true deploy
+        working-directory: shvmdb

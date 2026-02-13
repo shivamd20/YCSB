@@ -68,5 +68,11 @@ jobs:
         working-directory: shvmdb
 
       - name: Publish to GitHub Packages
-        run: mvn -B -DskipTests -Dcheckstyle.skip=true deploy
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/'))
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mvn -B -DskipTests -Dcheckstyle.skip=true \
+            -DaltDeploymentRepository=github::default::https://maven.pkg.github.com/${{ github.repository }} \
+            deploy
         working-directory: shvmdb
